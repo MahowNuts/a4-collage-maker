@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f6f3ed" />
+    <title>A4 コラージュメーカー</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <p class="eyebrow">PRINT-READY PHOTO COLLAGE</p>
+      <h1>A4 コラージュメーカー</h1>
+      <p>写真6枚とコメントを、印刷しやすいA4にまとめます。</p>
+    </header>
+
+    <main class="app-shell">
+      <section class="editor" aria-labelledby="edit-heading">
+        <div class="section-heading">
+          <span>01</span>
+          <h2 id="edit-heading">内容を入力</h2>
+        </div>
+
+        <label class="field-label" for="title-input">タイトル</label>
+        <input id="title-input" class="title-input" type="text" maxlength="40" placeholder="例：夏の思い出" />
+
+        <fieldset class="size-picker">
+          <legend>文字サイズ</legend>
+          <div class="segment-control">
+            <input id="size-small" name="font-size" type="radio" value="small" />
+            <label for="size-small">小</label>
+            <input id="size-medium" name="font-size" type="radio" value="medium" checked />
+            <label for="size-medium">中</label>
+            <input id="size-large" name="font-size" type="radio" value="large" />
+            <label for="size-large">大</label>
+          </div>
+        </fieldset>
+
+        <div class="section-heading photo-heading">
+          <span>02</span>
+          <h2>写真と説明文</h2>
+        </div>
+        <p class="helper">写真枠をタップして選択します。縦横どちらの写真も枠いっぱいに配置されます。</p>
+        <div id="photo-editor-grid" class="photo-editor-grid"></div>
+
+        <section id="adjust-panel" class="adjust-panel" aria-live="polite">
+          <div class="adjust-panel-top">
+            <div>
+              <p class="adjust-kicker">選択中の写真</p>
+              <h3 id="selected-photo-name">写真 1</h3>
+            </div>
+            <button id="reset-position" class="text-button" type="button">位置を戻す</button>
+          </div>
+          <p class="helper">写真の見せたい場所が中央にくるよう、位置を調整できます。</p>
+          <label for="position-x">横位置 <output id="position-x-output">50</output></label>
+          <input id="position-x" type="range" min="0" max="100" value="50" />
+          <label for="position-y">縦位置 <output id="position-y-output">50</output></label>
+          <input id="position-y" type="range" min="0" max="100" value="50" />
+          <label for="photo-scale">拡大・縮小 <output id="photo-scale-output">100%</output></label>
+          <input id="photo-scale" type="range" min="50" max="150" value="100" />
+        </section>
+
+        <button id="auto-arrange" class="primary-button" type="button">自動配置する</button>
+        <button id="save-pdf" class="secondary-button" type="button" onclick="window.print()">PDFとして保存</button>
+        <p class="print-note">保存画面では「PDFに保存」を選び、用紙サイズが A4・縦向きであることを確認してください。</p>
+        <p id="status-message" class="status-message" role="status"></p>
+      </section>
+
+      <section class="preview-section" aria-labelledby="preview-heading">
+        <div class="preview-heading-row">
+          <div class="section-heading">
+            <span>03</span>
+            <h2 id="preview-heading">A4プレビュー</h2>
+          </div>
+          <span class="a4-badge">A4・縦</span>
+        </div>
+        <p class="helper">印刷時の仕上がりイメージです。</p>
+        <div class="paper-stage">
+          <article id="a4-paper" class="a4-paper size-medium" aria-label="A4コラージュのプレビュー">
+            <h2 id="preview-title" class="paper-title">タイトルを入力してください</h2>
+            <div id="collage-grid" class="collage-grid"></div>
+            <p class="paper-footer">A4 COLLAGE MAKER</p>
+          </article>
+        </div>
+      </section>
+    </main>
+    <template id="editor-card-template">
+      <article class="editor-card">
+        <label class="photo-upload">
+          <input class="photo-input" type="file" accept="image/*" />
+          <span class="upload-icon" aria-hidden="true">＋</span>
+          <span class="upload-label">写真を選ぶ</span>
+        </label>
+        <label class="caption-label">説明文
+          <input class="caption-input" type="text" maxlength="51" placeholder="説明を入力" />
+        </label>
+      </article>
+    </template>
+    <template id="preview-card-template">
+      <article class="collage-item">
+        <div class="image-frame"><img class="collage-image" alt="" /></div>
+        <p class="collage-caption">説明文を入力</p>
+      </article>
+    </template>
+    <script src="app.js"></script>
+  </body>
+</html>
