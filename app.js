@@ -1,6 +1,7 @@
 const photoCount = 6;
 const photos = Array.from({ length: photoCount }, () => ({ src: '', x: 50, y: 50, scale: 100, aspectRatio: null }));
 let selectedIndex = 0;
+let activePhotoCount = 6;
 
 const editorGrid = document.querySelector('#photo-editor-grid');
 const collageGrid = document.querySelector('#collage-grid');
@@ -63,6 +64,7 @@ for (let index = 0; index < photoCount; index += 1) {
 
 function getPreviewImage(index) { return collageGrid.children[index].querySelector('.collage-image'); }
 function selectPhoto(index) {
+  if (index >= activePhotoCount) return;
   selectedIndex = index;
   document.querySelectorAll('.photo-upload').forEach((el, i) => el.classList.toggle('is-selected', i === index));
   selectedName.textContent = `写真 ${index + 1}`;
@@ -71,6 +73,19 @@ function selectPhoto(index) {
   scaleSlider.value = photos[index].scale;
   applyPhotoPosition(index);
   updateSliderOutputs();
+}
+function applyPaperClasses() {
+  const selectedSize = document.querySelector('input[name="font-size"]:checked').value;
+  paper.className = `a4-paper size-${selectedSize} template-${activePhotoCount}`;
+}
+function setTemplate(count) {
+  activePhotoCount = Number(count);
+  document.body.dataset.template = activePhotoCount;
+  Array.from(editorGrid.children).forEach((card, index) => card.classList.toggle('is-template-hidden', index >= activePhotoCount));
+  Array.from(collageGrid.children).forEach((card, index) => card.classList.toggle('is-template-hidden', index >= activePhotoCount));
+  applyPaperClasses();
+  for (let index = 0; index < activePhotoCount; index += 1) applyPhotoPosition(index);
+  selectPhoto(selectedIndex < activePhotoCount ? selectedIndex : 0);
 }
 function applyPhotoPosition(index) {
   const photo = photos[index];
@@ -111,8 +126,16 @@ function updateSliderOutputs() {
 
 titleInput.addEventListener('input', () => { previewTitle.textContent = titleInput.value || 'タイトルを入力してください'; });
 document.querySelectorAll('input[name="font-size"]').forEach((input) => input.addEventListener('change', () => {
-  paper.className = `a4-paper size-${input.value}`;
+  applyPaperClasses();
 }));
+document.querySelectorAll('input[name="template"]').forEach((input) => {
+  const applySelectedTemplate = () => {
+    if (input.checked) setTemplate(input.value);
+  };
+  input.addEventListener('click', applySelectedTemplate);
+  input.addEventListener('input', applySelectedTemplate);
+  input.addEventListener('change', applySelectedTemplate);
+});
 [xSlider, ySlider].forEach((slider) => {
   slider.addEventListener('input', updatePosition);
   slider.addEventListener('change', updatePosition);
@@ -123,7 +146,7 @@ document.querySelectorAll('input[name="font-size"]').forEach((input) => input.ad
 });
 document.querySelector('#reset-position').addEventListener('click', () => { xSlider.value = 50; ySlider.value = 50; updatePosition(); });
 document.querySelector('#auto-arrange').addEventListener('click', () => {
-  photos.forEach((photo, index) => {
+  photos.slice(0, activePhotoCount).forEach((photo, index) => {
     photo.x = 50; photo.y = 50;
     applyPhotoPosition(index);
   });
@@ -131,4 +154,4 @@ document.querySelector('#auto-arrange').addEventListener('click', () => {
   statusMessage.textContent = '写真を中央に自動配置しました。必要なら下のスライダーで調整できます。';
   window.setTimeout(() => { statusMessage.textContent = ''; }, 3500);
 });
-selectPhoto(0);
+setTemplate(activePhotoCount);

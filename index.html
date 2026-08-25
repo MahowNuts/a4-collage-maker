@@ -36,6 +36,16 @@
           </div>
         </fieldset>
 
+        <fieldset class="template-picker">
+          <legend>テンプレート</legend>
+          <div class="segment-control">
+            <input id="template-6" name="template" type="radio" value="6" checked />
+            <label for="template-6">写真6枚</label>
+            <input id="template-4" name="template" type="radio" value="4" />
+            <label for="template-4">写真4枚</label>
+          </div>
+        </fieldset>
+
         <div class="section-heading photo-heading">
           <span>02</span>
           <h2>写真と説明文</h2>
@@ -76,7 +86,7 @@
         </div>
         <p class="helper">印刷時の仕上がりイメージです。</p>
         <div class="paper-stage">
-          <article id="a4-paper" class="a4-paper size-medium" aria-label="A4コラージュのプレビュー">
+          <article id="a4-paper" class="a4-paper size-medium template-6" aria-label="A4コラージュのプレビュー">
             <h2 id="preview-title" class="paper-title">タイトルを入力してください</h2>
             <div id="collage-grid" class="collage-grid"></div>
             <p class="paper-footer">A4 COLLAGE MAKER</p>
