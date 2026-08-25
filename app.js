@@ -65,6 +65,7 @@ for (let index = 0; index < photoCount; index += 1) {
       removeButton.disabled = false;
       previewImage.src = reader.result;
       previewImage.classList.add('visible');
+      previewImage.closest('.collage-item').classList.add('has-image');
       selectPhoto(index);
     });
     reader.readAsDataURL(file);
@@ -107,6 +108,7 @@ function resetPhoto(index) {
   removeButton.disabled = true;
   previewImage.removeAttribute('src');
   previewImage.classList.remove('visible');
+  previewImage.closest('.collage-item').classList.remove('has-image');
   previewImage.removeAttribute('style');
   selectPhoto(index);
 }
@@ -161,66 +163,80 @@ function applyImageLayout(image, photo) {
   image.style.top = `${(100 - height) * (photo.y / 100)}%`;
 }
 function clampPosition(value) { return Math.max(0, Math.min(100, Math.round(value))); }
-function activatePreviewDrag(frame) {
-  if (!previewDrag || previewDrag.dragging) return;
-  previewDrag.dragging = true;
-  frame.closest('.collage-item').classList.add('is-dragging');
-  frame.setPointerCapture?.(previewDrag.pointerId);
+function clampScale(value) { return Math.max(50, Math.min(150, Math.round(value))); }
+function updatePreviewControls(index) {
+  const photo = photos[index];
+  xSlider.value = photo.x;
+  ySlider.value = photo.y;
+  scaleSlider.value = photo.scale;
+  updateSliderOutputs();
+}
+function getPinchDistance(pointers) {
+  const [first, second] = Array.from(pointers.values());
+  return Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
+}
+function setMoveBaseline() {
+  const [pointerId, pointer] = previewDrag.pointers.entries().next().value;
+  previewDrag.mode = 'move';
+  previewDrag.startPointerId = pointerId;
+  previewDrag.startClientX = pointer.clientX;
+  previewDrag.startClientY = pointer.clientY;
+  previewDrag.startX = photos[previewDrag.index].x;
+  previewDrag.startY = photos[previewDrag.index].y;
+}
+function activatePinch() {
+  previewDrag.mode = 'pinch';
+  previewDrag.startPinchDistance = getPinchDistance(previewDrag.pointers);
+  previewDrag.startScale = photos[previewDrag.index].scale;
 }
 function beginPreviewDrag(event, index, frame) {
   selectPhoto(index);
-  if (!photos[index].src || !photos[index].aspectRatio || event.button !== 0) return;
-  previewDrag = {
-    index,
-    pointerId: event.pointerId,
-    pointerType: event.pointerType,
-    startClientX: event.clientX,
-    startClientY: event.clientY,
-    startX: photos[index].x,
-    startY: photos[index].y,
-    dragging: false,
-    timer: null,
-  };
-  if (event.pointerType === 'touch') {
-    previewDrag.timer = window.setTimeout(() => activatePreviewDrag(frame), 180);
-  } else {
-    activatePreviewDrag(frame);
+  if (!photos[index].src || !photos[index].aspectRatio || (event.pointerType === 'mouse' && event.button !== 0)) return;
+  if (!previewDrag || previewDrag.index !== index) {
+    previewDrag = { index, pointers: new Map(), mode: 'move' };
+    frame.closest('.collage-item').classList.add('is-dragging');
   }
+  previewDrag.pointers.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY });
+  frame.setPointerCapture?.(event.pointerId);
+  if (previewDrag.pointers.size === 1) setMoveBaseline();
+  if (previewDrag.pointers.size === 2) activatePinch();
+  event.preventDefault();
 }
 function movePreviewDrag(event, frame) {
-  if (!previewDrag || previewDrag.pointerId !== event.pointerId) return;
-  const moveX = event.clientX - previewDrag.startClientX;
-  const moveY = event.clientY - previewDrag.startClientY;
-  if (!previewDrag.dragging) {
-    if (previewDrag.pointerType === 'touch') {
-      if (Math.abs(moveX) <= 8 && Math.abs(moveY) <= 8) return;
-    }
-    if (Math.abs(moveX) <= 2 && Math.abs(moveY) <= 2) return;
-    activatePreviewDrag(frame);
-  }
-  event.preventDefault();
+  if (!previewDrag || !previewDrag.pointers.has(event.pointerId)) return;
+  previewDrag.pointers.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY });
   const photo = photos[previewDrag.index];
+  if (previewDrag.mode === 'pinch' && previewDrag.pointers.size >= 2) {
+    const scaleFactor = getPinchDistance(previewDrag.pointers) / previewDrag.startPinchDistance;
+    photo.scale = clampScale(previewDrag.startScale * scaleFactor);
+    applyPhotoPosition(previewDrag.index);
+    updatePreviewControls(previewDrag.index);
+    event.preventDefault();
+    return;
+  }
   const image = getPreviewImage(previewDrag.index);
   const { width, height } = getImageDimensions(image, photo);
   const frameRect = frame.getBoundingClientRect();
+  const moveX = event.clientX - previewDrag.startClientX;
+  const moveY = event.clientY - previewDrag.startClientY;
   const horizontalRoom = 100 - width;
   const verticalRoom = 100 - height;
   if (horizontalRoom !== 0) photo.x = clampPosition(previewDrag.startX + ((moveX / frameRect.width) * 10000) / horizontalRoom);
   if (verticalRoom !== 0) photo.y = clampPosition(previewDrag.startY + ((moveY / frameRect.height) * 10000) / verticalRoom);
-  xSlider.value = photo.x;
-  ySlider.value = photo.y;
   applyPhotoPosition(previewDrag.index);
-  updateSliderOutputs();
+  updatePreviewControls(previewDrag.index);
+  event.preventDefault();
 }
 function endPreviewDrag(event, frame) {
-  if (!previewDrag || previewDrag.pointerId !== event.pointerId) return;
-  window.clearTimeout(previewDrag.timer);
-  if (previewDrag.dragging) {
-    event.preventDefault();
+  if (!previewDrag || !previewDrag.pointers.has(event.pointerId)) return;
+  previewDrag.pointers.delete(event.pointerId);
+  if (frame.hasPointerCapture?.(event.pointerId)) frame.releasePointerCapture(event.pointerId);
+  if (previewDrag.pointers.size === 1) setMoveBaseline();
+  if (previewDrag.pointers.size === 0) {
     frame.closest('.collage-item').classList.remove('is-dragging');
-    if (frame.hasPointerCapture?.(event.pointerId)) frame.releasePointerCapture(event.pointerId);
+    previewDrag = null;
   }
-  previewDrag = null;
+  event.preventDefault();
 }
 function updatePosition() {
   const photo = photos[selectedIndex];
