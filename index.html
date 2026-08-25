@@ -38,17 +38,47 @@
 
         <fieldset class="template-picker">
           <legend>テンプレート</legend>
-          <div class="segment-control">
-            <input id="template-6" name="template" type="radio" value="6" checked />
-            <label for="template-6">写真6枚</label>
-            <input id="template-4" name="template" type="radio" value="4" />
-            <label for="template-4">写真4枚</label>
-            <input id="template-portrait-4" name="template" type="radio" value="portrait-4" />
-            <label for="template-portrait-4">縦長4枚</label>
-            <input id="template-2" name="template" type="radio" value="2" />
-            <label for="template-2">写真2枚</label>
-            <input id="template-portrait-2" name="template" type="radio" value="portrait-2" />
-            <label for="template-portrait-2">縦長2枚</label>
+          <div class="template-groups">
+            <section class="template-group" aria-labelledby="template-group-6">
+              <h3 id="template-group-6">6枚</h3>
+              <div class="segment-control template-options">
+                <input id="template-6" name="template" type="radio" value="6" checked />
+                <label for="template-6">
+                  <span class="template-mini mini-6" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                  <span>横長</span>
+                </label>
+              </div>
+            </section>
+            <section class="template-group" aria-labelledby="template-group-4">
+              <h3 id="template-group-4">4枚</h3>
+              <div class="segment-control template-options">
+                <input id="template-4" name="template" type="radio" value="4" />
+                <label for="template-4">
+                  <span class="template-mini mini-4-landscape" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                  <span>横長</span>
+                </label>
+                <input id="template-portrait-4" name="template" type="radio" value="portrait-4" />
+                <label for="template-portrait-4">
+                  <span class="template-mini mini-4-portrait" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                  <span>縦長</span>
+                </label>
+              </div>
+            </section>
+            <section class="template-group" aria-labelledby="template-group-2">
+              <h3 id="template-group-2">2枚</h3>
+              <div class="segment-control template-options">
+                <input id="template-2" name="template" type="radio" value="2" />
+                <label for="template-2">
+                  <span class="template-mini mini-2-landscape" aria-hidden="true"><i></i><i></i></span>
+                  <span>横長</span>
+                </label>
+                <input id="template-portrait-2" name="template" type="radio" value="portrait-2" />
+                <label for="template-portrait-2">
+                  <span class="template-mini mini-2-portrait" aria-hidden="true"><i></i><i></i></span>
+                  <span>縦長</span>
+                </label>
+              </div>
+            </section>
           </div>
         </fieldset>
 
