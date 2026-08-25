@@ -2,6 +2,12 @@ const photoCount = 6;
 const photos = Array.from({ length: photoCount }, () => ({ src: '', x: 50, y: 50, scale: 100, aspectRatio: null }));
 let selectedIndex = 0;
 let activePhotoCount = 6;
+let activeTemplate = '6';
+const templateConfig = {
+  '6': { photoCount: 6, paperClass: 'template-6' },
+  '4': { photoCount: 4, paperClass: 'template-4' },
+  'portrait-4': { photoCount: 4, paperClass: 'template-portrait-4' },
+};
 
 const editorGrid = document.querySelector('#photo-editor-grid');
 const collageGrid = document.querySelector('#collage-grid');
@@ -76,11 +82,12 @@ function selectPhoto(index) {
 }
 function applyPaperClasses() {
   const selectedSize = document.querySelector('input[name="font-size"]:checked').value;
-  paper.className = `a4-paper size-${selectedSize} template-${activePhotoCount}`;
+  paper.className = `a4-paper size-${selectedSize} ${templateConfig[activeTemplate].paperClass}`;
 }
-function setTemplate(count) {
-  activePhotoCount = Number(count);
-  document.body.dataset.template = activePhotoCount;
+function setTemplate(template) {
+  activeTemplate = template;
+  activePhotoCount = templateConfig[activeTemplate].photoCount;
+  document.body.dataset.template = activeTemplate;
   Array.from(editorGrid.children).forEach((card, index) => card.classList.toggle('is-template-hidden', index >= activePhotoCount));
   Array.from(collageGrid.children).forEach((card, index) => card.classList.toggle('is-template-hidden', index >= activePhotoCount));
   applyPaperClasses();
@@ -154,4 +161,4 @@ document.querySelector('#auto-arrange').addEventListener('click', () => {
   statusMessage.textContent = '写真を中央に自動配置しました。必要なら下のスライダーで調整できます。';
   window.setTimeout(() => { statusMessage.textContent = ''; }, 3500);
 });
-setTemplate(activePhotoCount);
+setTemplate(activeTemplate);
