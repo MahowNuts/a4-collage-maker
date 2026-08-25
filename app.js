@@ -8,6 +8,7 @@ const templateConfig = {
   '4': { photoCount: 4, paperClass: 'template-4' },
   'portrait-4': { photoCount: 4, paperClass: 'template-portrait-4' },
   '2': { photoCount: 2, paperClass: 'template-2' },
+  'portrait-2': { photoCount: 2, paperClass: 'template-portrait-2' },
 };
 
 const editorGrid = document.querySelector('#photo-editor-grid');
