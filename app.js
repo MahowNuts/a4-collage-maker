@@ -19,13 +19,6 @@ const previewTemplate = document.querySelector('#preview-card-template');
 const titleInput = document.querySelector('#title-input');
 const previewTitle = document.querySelector('#preview-title');
 const paper = document.querySelector('#a4-paper');
-const xSlider = document.querySelector('#position-x');
-const ySlider = document.querySelector('#position-y');
-const xOutput = document.querySelector('#position-x-output');
-const yOutput = document.querySelector('#position-y-output');
-const scaleSlider = document.querySelector('#photo-scale');
-const scaleOutput = document.querySelector('#photo-scale-output');
-const selectedName = document.querySelector('#selected-photo-name');
 const statusMessage = document.querySelector('#status-message');
 
 for (let index = 0; index < photoCount; index += 1) {
@@ -117,12 +110,7 @@ function selectPhoto(index) {
   selectedIndex = index;
   document.querySelectorAll('.photo-upload').forEach((el, i) => el.classList.toggle('is-selected', i === index));
   Array.from(collageGrid.children).forEach((el, i) => el.classList.toggle('is-selected', i === index));
-  selectedName.textContent = `写真 ${index + 1}`;
-  xSlider.value = photos[index].x;
-  ySlider.value = photos[index].y;
-  scaleSlider.value = photos[index].scale;
   applyPhotoPosition(index);
-  updateSliderOutputs();
 }
 function applyPaperClasses() {
   const selectedSize = document.querySelector('input[name="font-size"]:checked').value;
@@ -164,13 +152,6 @@ function applyImageLayout(image, photo) {
 }
 function clampPosition(value) { return Math.max(0, Math.min(100, Math.round(value))); }
 function clampScale(value) { return Math.max(50, Math.min(150, Math.round(value))); }
-function updatePreviewControls(index) {
-  const photo = photos[index];
-  xSlider.value = photo.x;
-  ySlider.value = photo.y;
-  scaleSlider.value = photo.scale;
-  updateSliderOutputs();
-}
 function getPinchDistance(pointers) {
   const [first, second] = Array.from(pointers.values());
   return Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
@@ -210,7 +191,6 @@ function movePreviewDrag(event, frame) {
     const scaleFactor = getPinchDistance(previewDrag.pointers) / previewDrag.startPinchDistance;
     photo.scale = clampScale(previewDrag.startScale * scaleFactor);
     applyPhotoPosition(previewDrag.index);
-    updatePreviewControls(previewDrag.index);
     event.preventDefault();
     return;
   }
@@ -224,7 +204,6 @@ function movePreviewDrag(event, frame) {
   if (horizontalRoom !== 0) photo.x = clampPosition(previewDrag.startX + ((moveX / frameRect.width) * 10000) / horizontalRoom);
   if (verticalRoom !== 0) photo.y = clampPosition(previewDrag.startY + ((moveY / frameRect.height) * 10000) / verticalRoom);
   applyPhotoPosition(previewDrag.index);
-  updatePreviewControls(previewDrag.index);
   event.preventDefault();
 }
 function endPreviewDrag(event, frame) {
@@ -238,24 +217,6 @@ function endPreviewDrag(event, frame) {
   }
   event.preventDefault();
 }
-function updatePosition() {
-  const photo = photos[selectedIndex];
-  photo.x = Number(xSlider.value);
-  photo.y = Number(ySlider.value);
-  applyPhotoPosition(selectedIndex);
-  updateSliderOutputs();
-}
-function updateScale() {
-  photos[selectedIndex].scale = Number(scaleSlider.value);
-  applyPhotoPosition(selectedIndex);
-  updateSliderOutputs();
-}
-function updateSliderOutputs() {
-  xOutput.value = xSlider.value;
-  yOutput.value = ySlider.value;
-  scaleOutput.value = `${scaleSlider.value}%`;
-}
-
 titleInput.addEventListener('input', () => { previewTitle.textContent = titleInput.value || 'タイトルを入力してください'; });
 document.querySelectorAll('input[name="font-size"]').forEach((input) => input.addEventListener('change', () => {
   applyPaperClasses();
@@ -268,22 +229,13 @@ document.querySelectorAll('input[name="template"]').forEach((input) => {
   input.addEventListener('input', applySelectedTemplate);
   input.addEventListener('change', applySelectedTemplate);
 });
-[xSlider, ySlider].forEach((slider) => {
-  slider.addEventListener('input', updatePosition);
-  slider.addEventListener('change', updatePosition);
-});
-[scaleSlider].forEach((slider) => {
-  slider.addEventListener('input', updateScale);
-  slider.addEventListener('change', updateScale);
-});
-document.querySelector('#reset-position').addEventListener('click', () => { xSlider.value = 50; ySlider.value = 50; updatePosition(); });
 document.querySelector('#auto-arrange').addEventListener('click', () => {
   photos.slice(0, activePhotoCount).forEach((photo, index) => {
     photo.x = 50; photo.y = 50;
     applyPhotoPosition(index);
   });
   selectPhoto(selectedIndex);
-  statusMessage.textContent = '写真を中央に自動配置しました。必要なら下のスライダーで調整できます。';
+  statusMessage.textContent = '写真を中央に自動配置しました。必要ならプレビュー上で調整できます。';
   window.setTimeout(() => { statusMessage.textContent = ''; }, 3500);
 });
 setTemplate(activeTemplate);

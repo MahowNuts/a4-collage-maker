@@ -93,28 +93,6 @@
         </div>
         <p class="helper">写真枠をタップして選択します。縦横どちらの写真も枠いっぱいに配置されます。</p>
         <div id="photo-editor-grid" class="photo-editor-grid"></div>
-
-        <section id="adjust-panel" class="adjust-panel" aria-live="polite">
-          <div class="adjust-panel-top">
-            <div>
-              <p class="adjust-kicker">選択中の写真</p>
-              <h3 id="selected-photo-name">写真 1</h3>
-            </div>
-            <button id="reset-position" class="text-button" type="button">位置を戻す</button>
-          </div>
-          <p class="helper">写真の見せたい場所が中央にくるよう、位置を調整できます。</p>
-          <label for="position-x">横位置 <output id="position-x-output">50</output></label>
-          <input id="position-x" type="range" min="0" max="100" value="50" />
-          <label for="position-y">縦位置 <output id="position-y-output">50</output></label>
-          <input id="position-y" type="range" min="0" max="100" value="50" />
-          <label for="photo-scale">拡大・縮小 <output id="photo-scale-output">100%</output></label>
-          <input id="photo-scale" type="range" min="50" max="150" value="100" />
-        </section>
-
-        <button id="auto-arrange" class="primary-button" type="button">自動配置する</button>
-        <button id="save-pdf" class="secondary-button" type="button" onclick="window.print()">PDFとして保存</button>
-        <p class="print-note">保存画面では「PDFに保存」を選び、用紙サイズが A4・縦向きであることを確認してください。</p>
-        <p id="status-message" class="status-message" role="status"></p>
       </section>
 
       <section class="preview-section" aria-labelledby="preview-heading">
@@ -132,6 +110,12 @@
             <div id="collage-grid" class="collage-grid"></div>
             <p class="paper-footer">A4 COLLAGE MAKER</p>
           </article>
+        </div>
+        <div class="preview-actions">
+          <button id="auto-arrange" class="primary-button" type="button">自動配置する</button>
+          <button id="save-pdf" class="secondary-button" type="button" onclick="window.print()">PDFとして保存</button>
+          <p class="print-note">保存画面では「PDFに保存」を選び、用紙サイズが A4・縦向きであることを確認してください。</p>
+          <p id="status-message" class="status-message" role="status"></p>
         </div>
       </section>
     </main>
