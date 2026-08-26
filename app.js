@@ -20,6 +20,7 @@ const titleInput = document.querySelector('#title-input');
 const previewTitle = document.querySelector('#preview-title');
 const paper = document.querySelector('#a4-paper');
 const statusMessage = document.querySelector('#status-message');
+const saveJpgButton = document.querySelector('#save-jpg');
 
 for (let index = 0; index < photoCount; index += 1) {
   const editorCard = editorTemplate.content.cloneNode(true);
@@ -238,4 +239,135 @@ document.querySelector('#auto-arrange').addEventListener('click', () => {
   statusMessage.textContent = '写真を中央に自動配置しました。必要ならプレビュー上で調整できます。';
   window.setTimeout(() => { statusMessage.textContent = ''; }, 3500);
 });
+
+function getCanvasFont(style, scale) {
+  const fontSize = Number.parseFloat(style.fontSize) * scale;
+  return `${style.fontStyle} ${style.fontWeight} ${fontSize}px ${style.fontFamily}`;
+}
+
+function drawWrappedText(context, text, element, paperRect, scale, align = 'left') {
+  const rect = element.getBoundingClientRect();
+  const style = getComputedStyle(element);
+  const x = (rect.left - paperRect.left) * scale;
+  const y = (rect.top - paperRect.top) * scale;
+  const width = rect.width * scale;
+  const height = rect.height * scale;
+  const lineHeight = Number.parseFloat(style.lineHeight) * scale;
+  const characters = Array.from(text);
+  const lines = [];
+  let line = '';
+
+  context.font = getCanvasFont(style, scale);
+
+  characters.forEach((character) => {
+    const candidate = line + character;
+    if (line && context.measureText(candidate).width > width) {
+      lines.push(line);
+      line = character;
+    } else {
+      line = candidate;
+    }
+  });
+  if (line) lines.push(line);
+
+  context.save();
+  context.beginPath();
+  context.rect(x, y, width, height);
+  context.clip();
+  context.fillStyle = style.color;
+  context.font = getCanvasFont(style, scale);
+  context.textAlign = align;
+  context.textBaseline = 'top';
+  const textX = align === 'center' ? x + width / 2 : x;
+  lines.forEach((currentLine, index) => {
+    context.fillText(currentLine, textX, y + index * lineHeight);
+  });
+  context.restore();
+}
+
+async function saveAsJpg() {
+  saveJpgButton.disabled = true;
+  statusMessage.textContent = '高解像度JPGを作成しています…';
+
+  try {
+    await document.fonts?.ready;
+    await Promise.all(photos.slice(0, activePhotoCount).map((photo) => {
+      if (!photo.src) return Promise.resolve();
+      const image = new Image();
+      image.src = photo.src;
+      return image.decode?.().catch(() => undefined) || Promise.resolve();
+    }));
+
+    const outputWidth = 2480;
+    const outputHeight = 3508;
+    const canvas = document.createElement('canvas');
+    canvas.width = outputWidth;
+    canvas.height = outputHeight;
+    const context = canvas.getContext('2d');
+    const paperRect = paper.getBoundingClientRect();
+    const scale = outputWidth / paperRect.width;
+    const paperStyle = getComputedStyle(paper);
+
+    context.fillStyle = paperStyle.backgroundColor;
+    context.fillRect(0, 0, outputWidth, outputHeight);
+
+    drawWrappedText(context, previewTitle.textContent, previewTitle, paperRect, scale, 'center');
+
+    Array.from(collageGrid.children).slice(0, activePhotoCount).forEach((item) => {
+      const frame = item.querySelector('.image-frame');
+      const image = item.querySelector('.collage-image');
+      const caption = item.querySelector('.collage-caption');
+      const frameRect = frame.getBoundingClientRect();
+      const frameStyle = getComputedStyle(frame);
+      const frameX = (frameRect.left - paperRect.left) * scale;
+      const frameY = (frameRect.top - paperRect.top) * scale;
+      const frameWidth = frameRect.width * scale;
+      const frameHeight = frameRect.height * scale;
+
+      context.fillStyle = frameStyle.backgroundColor;
+      context.fillRect(frameX, frameY, frameWidth, frameHeight);
+
+      if (image.classList.contains('visible') && image.complete && image.naturalWidth) {
+        const imageRect = image.getBoundingClientRect();
+        context.save();
+        context.beginPath();
+        context.rect(frameX, frameY, frameWidth, frameHeight);
+        context.clip();
+        context.drawImage(
+          image,
+          (imageRect.left - paperRect.left) * scale,
+          (imageRect.top - paperRect.top) * scale,
+          imageRect.width * scale,
+          imageRect.height * scale,
+        );
+        context.restore();
+      }
+
+      drawWrappedText(context, caption.textContent, caption, paperRect, scale);
+    });
+
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob((result) => result ? resolve(result) : reject(new Error('JPEGの作成に失敗しました。')), 'image/jpeg', 0.95);
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const date = new Date();
+    const stamp = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('');
+    link.href = url;
+    link.download = `a4-collage-${stamp}.jpg`;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+    statusMessage.textContent = 'A4のJPGを保存しました。';
+  } catch (error) {
+    console.error(error);
+    statusMessage.textContent = 'JPGを保存できませんでした。もう一度お試しください。';
+  } finally {
+    saveJpgButton.disabled = false;
+    window.setTimeout(() => { statusMessage.textContent = ''; }, 5000);
+  }
+}
+
+saveJpgButton.addEventListener('click', saveAsJpg);
 setTemplate(activeTemplate);
